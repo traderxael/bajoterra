@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BajoTerra: Cavernas Profundas · Batalla de Babosas</title>
+  <meta name="description" content="Juego de estrategia y batalla de babosas inspirado en BajoTerra (Slugterra). Dispara a 100 MPH, transforma a tus babosas en velocimorfos y defiende las cavernas del Dr. Blakk.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐌</text></svg>">
+</head>
+<body>
+  <!-- Lienzo interactivo de esporas y chispas bioluminiscentes -->
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- Barra superior de navegación y controles -->
+    <header class="header-bar">
+      <div class="brand-logo" id="navHome">
+        <span class="brand-icon">🐌</span>
+        <div>
+          <div class="brand-title">BajoTerra</div>
+          <div class="brand-sub">Cavernas Profundas · Batalla 100 MPH</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button type="button" class="btn-icon" id="btnAudio" title="Activar/Silenciar sonido">🔊</button>
+        <button type="button" class="btn-icon" id="btnPokedex" title="Abrir Babosario">📖</button>
+      </div>
+    </header>
+
+    <!-- =========================================================================
+         VISTA 1: MENÚ PRINCIPAL (HUB DE CAVERNAS)
+         ========================================================================= -->
+    <main id="viewHub" class="view-screen active">
+      <div class="hero-hub">
+        <div class="hero-text">
+          <h1>¡DISPARA A <span>100 MPH</span> Y DESPIERTA EL PODER!</h1>
+          <p>Adéntrate en el misterioso mundo subterráneo de Bajo Terra. Forma tu arsenal con babosas legendarias como Infierno, Sanadora Doc o Electroshock, y defiende las 99 cavernas de la corrupción de las Sombras.</p>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <button type="button" class="btn-primary" id="btnStartCampaign">🏆 Modo Cavernas (Campaña)</button>
+            <button type="button" class="btn-secondary" id="btnStartQuick">⚔️ Duelo Rápido 3v3</button>
+          </div>
+        </div>
+
+        <div class="mode-cards-grid">
+          <div class="mode-card" id="cardCampaign">
+            <div class="mode-icon">🗺️</div>
+            <div class="mode-info">
+              <h3>Expedición de Cavernas</h3>
+              <p>5 Cavernas legendarias con jefes y babosas oscuras del Dr. Blakk.</p>
+            </div>
+            <span class="badge-tag">Historia</span>
+          </div>
+
+          <div class="mode-card" id="cardQuick">
+            <div class="mode-icon">⚡</div>
+            <div class="mode-info">
+              <h3>Arena de Duelos</h3>
+              <p>Enfréntate a lanzadores rivales en combates rápidos de 3 contra 3.</p>
+            </div>
+            <span class="badge-tag">PVP / IA</span>
+          </div>
+
+          <div class="mode-card" id="cardEncyclopedia">
+            <div class="mode-icon">🔬</div>
+            <div class="mode-info">
+              <h3>El Babosario</h3>
+              <p>Explora más de 40 babosas, hábitats, velocimorfos y variantes malvadas.</p>
+            </div>
+            <span class="badge-tag">Catálogo</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+         VISTA 2: CREACIÓN DE PERSONAJE & RAZA
+         ========================================================================= -->
+    <section id="viewCharacter" class="view-screen">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">👤 Perfil del Lanzador</h2>
+          <button type="button" class="btn-secondary" id="btnBackToHub">↩ Menú Principal</button>
+        </div>
+
+        <div class="char-input-group">
+          <label for="charName">Nombre de Lanzador:</label>
+          <input type="text" id="charName" class="char-input" maxlength="20" placeholder="Ej: Eli Shane, Pronto...">
+        </div>
+
+        <h3 style="margin-bottom:1rem;color:var(--color-muted);font-size:1.1rem;">Elige la Raza de tu Personaje</h3>
+        <div class="race-grid" id="raceGrid">
+          <!-- Generado dinámicamente -->
+        </div>
+
+        <div id="bonoVersatil" style="display:none;margin-top:1.5rem;background:rgba(0,0,0,0.3);padding:1rem;border-radius:16px;border:1px solid var(--border-subtle);">
+          <h4 style="margin-bottom:0.6rem;color:var(--color-primary);">Bono de Humanoide: Selecciona atributo +10</h4>
+          <div style="display:flex;gap:0.7rem;flex-wrap:wrap;" id="bonoButtons">
+            <!-- Botones de bonos -->
+          </div>
+        </div>
+
+        <div style="margin-top:2rem;display:flex;justify-content:flex-end;">
+          <button type="button" class="btn-primary" id="btnConfirmCharacter">Continuar → Elegir Babosas 🎒</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VISTA 3: ARSENAL / SELECCIÓN DE EQUIPO DE 3 BABOSAS
+         ========================================================================= -->
+    <section id="viewDeck" class="view-screen">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">🎒 Tu Portababosas (Holster)</h2>
+            <p id="deckCharSummary" style="font-size:0.9rem;color:var(--color-muted);margin-top:0.3rem;"></p>
+          </div>
+          <button type="button" class="btn-secondary" id="btnBackToChar">← Cambiar Personaje</button>
+        </div>
+
+        <!-- Ranuras del equipo -->
+        <div class="team-deck-bar" id="teamDeckBar">
+          <!-- 3 slots generados dinámicamente -->
+        </div>
+
+        <!-- Barra de filtros -->
+        <div style="margin-top:1.5rem;">
+          <h3 style="font-size:1rem;color:var(--color-muted);margin-bottom:0.7rem;">Filtrar Babosas Disponibles</h3>
+          <div class="filter-pills" id="categoryFilters">
+            <!-- Píldoras de categorías -->
+          </div>
+          <div class="filter-pills" id="elementFilters">
+            <!-- Píldoras de elementos -->
+          </div>
+        </div>
+
+        <!-- Grid de selección -->
+        <div class="slug-cards-grid" id="slugSelectionGrid">
+          <!-- Generado dinámicamente -->
+        </div>
+
+        <div style="margin-top:1.8rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+          <div id="deckStatusMsg" style="font-size:0.95rem;color:var(--color-primary);font-weight:600;"></div>
+          <button type="button" class="btn-primary" id="btnStartBattle" disabled>⚔️ ¡Cargar Lanzadora y Batallar!</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VISTA 4: ARENA DE BATALLA DE BABOSAS
+         ========================================================================= -->
+    <section id="viewBattle" class="view-screen">
+      <div class="arena-wrapper">
+        <!-- HUD Superior -->
+        <div class="arena-top-hud">
+          <div class="cavern-title-hud">
+            <span id="arenaCavernIcon">🌋</span>
+            <span id="arenaCavernName">Caverna Lumbre</span>
+          </div>
+          <div class="stage-tracker" id="arenaRoundTracker">Batalla 1 de 5</div>
+          <button type="button" class="btn-secondary" id="btnForfeitBattle" style="padding:0.4rem 1rem;font-size:0.85rem;">Salir ↩</button>
+        </div>
+
+        <!-- Escenario de Combate -->
+        <div class="battleground" id="battleground">
+          <!-- Bando Rival (Sombras / Dr. Blakk) -->
+          <div class="slugs-row" id="enemyRow">
+            <!-- 3 babosas rivales -->
+          </div>
+
+          <!-- Carril Central de Disparo & Velocímetro -->
+          <div class="battle-mid-lane" id="centerLane">
+            <div class="speed-gauge-wrap">
+              <span>VELOCIDAD:</span>
+              <span class="speed-dial-num" id="speedMeter">0</span>
+              <span class="speed-dial-unit">MPH</span>
+            </div>
+          </div>
+
+          <!-- Bando del Jugador (Lanzadora) -->
+          <div class="slugs-row" id="playerRow">
+            <!-- 3 babosas aliadas listas en el cilindro del blaster -->
+          </div>
+        </div>
+
+        <!-- Registro de Combate -->
+        <div class="battle-log-box" id="battleLog">
+          <div class="log-entry">💥 <b>¡Comienza el duelo!</b> Toca una babosa de tu lanzadora para disparar a 100 MPH.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         VISTA 5: BABOSARIO / ENCICLOPEDIA
+         ========================================================================= -->
+    <section id="viewEncyclopedia" class="view-screen">
+      <div class="glass-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">🔬 El Gran Babosario de las Cavernas</h2>
+          <button type="button" class="btn-secondary" id="btnClosePokedex">↩ Volver al Menú</button>
+        </div>
+
+        <div class="char-input-group" style="margin-bottom:1.2rem;">
+          <input type="text" id="pokedexSearch" class="char-input" placeholder="🔍 Buscar babosa por nombre, elemento o hábitat...">
+        </div>
+
+        <div class="filter-pills" id="pokedexCategoryFilters"></div>
+
+        <div class="slug-cards-grid" id="pokedexGrid" style="max-height:600px;">
+          <!-- Generado dinámicamente -->
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: FICHA DE BABOSA (PROTOFORMA vs VELOCIMORFO A 100 MPH)
+       ========================================================================= -->
+  <div class="modal-backdrop" id="slugModal">
+    <div class="modal-card" id="slugModalCard">
+      <button type="button" class="modal-close-btn" id="btnCloseModal">✕</button>
+      
+      <div class="modal-duo-portraits">
+        <div class="portrait-frame">
+          <div class="frame-circle">
+            <img id="mProtoImg" src="" alt="Protoforma">
+          </div>
+          <span class="frame-label">Protoforma</span>
+        </div>
+
+        <div class="portrait-frame">
+          <div class="frame-circle" style="border-color:#ff6a00;">
+            <img id="mTransImg" src="" alt="Velocimorfo a 100 MPH">
+          </div>
+          <span class="frame-label" style="color:#ffd93d;">A 100 MPH ⚡</span>
+        </div>
+      </div>
+
+      <div class="modal-info">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 id="mName">Infierno</h2>
+          <span id="mElementTag" class="element-tag">🔥 Fuego</span>
+        </div>
+        <p id="mHabitat" style="color:var(--color-muted);font-size:0.85rem;margin-top:0.2rem;">📍 Cavernas de Magma</p>
+
+        <p class="modal-desc" id="mDesc"></p>
+
+        <div class="modal-stats-grid">
+          <div class="m-stat-box">
+            <div class="m-stat-lbl">Poder / Ataque</div>
+            <div class="m-stat-val" id="mAtk">0</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-lbl">Energía / Salud</div>
+            <div class="m-stat-val" id="mHp">0</div>
+          </div>
+          <div class="m-stat-box">
+            <div class="m-stat-lbl">Velocidad Tiro</div>
+            <div class="m-stat-val" id="mVel">0</div>
+          </div>
+        </div>
+
+        <div id="mGhoulBox" style="background:rgba(142, 107, 255, 0.12);border:1px solid rgba(142, 107, 255, 0.3);border-radius:14px;padding:0.8rem;margin-top:1rem;display:none;">
+          <div style="color:#b9aed6;font-size:0.85rem;font-weight:700;">🌑 Versión Malvada (Ghoul):</div>
+          <div id="mGhoulText" style="font-size:0.9rem;color:#f3effa;margin-top:0.2rem;"></div>
+        </div>
+
+        <div style="margin-top:1.5rem;display:flex;justify-content:flex-end;gap:0.8rem;">
+          <button type="button" class="btn-primary" id="btnModalSelectSlug">Equipar en Portababosas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL: RESULTADO DE BATALLA (VICTORIA / DERROTA)
+       ========================================================================= -->
+  <div class="modal-backdrop" id="resultModal">
+    <div class="modal-card result-banner">
+      <div class="result-title" id="resTitle">¡VICTORIA!</div>
+      <p class="result-sub" id="resSubtitle">Las cavernas celebran el coraje de tu equipo de babosas.</p>
+      
+      <div id="resCavernRewards" style="margin-bottom:1.8rem;font-family:var(--font-tech);color:#ffd93d;font-size:1.2rem;"></div>
+
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <button type="button" class="btn-primary" id="btnNextCavern">Continuar Siguiente Caverna ➔</button>
+        <button type="button" class="btn-secondary" id="btnReplayBattle">Repetir Batalla 🔄</button>
+        <button type="button" class="btn-secondary" id="btnResultHome">Menú Principal 🏠</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts del juego -->
+  <script src="js/sound.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
